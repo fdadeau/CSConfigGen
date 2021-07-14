@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+	<head>
+    <meta charset="utf-8">
+    <title>Visualisation de systèmes à composants</title>
+    <meta name="color-scheme" content="dark light">
+    <link rel="stylesheet" href="./css/style.css">
+    <script type="module" src="./js/ihm.js"></script>
+</head>
+
+<body>
+
+    <section id="step0">
+        <h2>Step 1: edit component model</h2>
+        <p>Load a JSON file description, or complete the existing sample below.</p>
+        <form>
+            <input type="file" id="fileReader" accept="json" size="40" placeholder="" value="No selected file"><br>
+            <p id="analysis"></p>
+            <textarea id="model"></textarea><br>
+            <input type="reset" value="Erase">
+        </form>
+        <footer>
+            <button id="btnNext0">Next step (unfolding parameters)</button>
+        </footer>
+    </section>
+
+    <section id="step1">
+        <h2>Step 2: configure combinatorial unfolding</h2>
+        <form>
+            <p>Number of instances</p>
+            <table id="tblNumberInstances">
+                <thead>
+                    <tr><td>Component type</td><td>Min.</td><td>Max.</td></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <p>Maximal number of instances: <input id="nbMaxInstances" type="number" min="1" max="100" value="10"></p>
+        </form>
+        <footer>
+            <button id="btnNext1">Next step (functions)</button>
+            <button id="btnPrevious0">Previous step (model edition)</button>
+        </footer>
+    </section>
+
+    <section id="step2">
+        <h2>Step 3: define useful functions</h2>
+        <p>Write the function that will be used as an invariant, applied to each component, designated by <code>self</code> in the function. </p>
+        <textarea id="funcInvariant">return true;</textarea>
+
+        <p>Define, for each data type, the function that will be used to instantiate parameters.</p>
+        <table id="functionData">
+            <thead>
+                <tr><th>Data type</th><th>Instantiation function</th></tr>
+            </thead>
+            <tbody>
+                
+            </tbody>
+        </table>
+        <footer>
+            <button id="btnNext2">Next step (data generation)</button>
+            <button id="btnPrevious1">Previous step (unfolding parameters)</button>
+        </footer>
+    </section>
+
+    <section id="step3">
+        <h2>Data generation</h2>
+        <p>Here is the result of the data generation. </p>
+        
+        <p>        
+            <button id="btnSolutionPrevious">Previous</button>
+            Solution <span id="nbSolution"></span> / <span id="totalSolutions"></span>
+            <button id="btnSolutionNext">Next</button>
+        </p>
+        
+        <div id="bcSolution">
+        
+        </div>
+
+        <footer>
+            <button id="btnPrevious2">Previous step (functions)</button>
+        </footer>
+    </section>
+        
+</body>
+</html>
