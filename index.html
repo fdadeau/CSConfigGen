@@ -2,14 +2,22 @@
 <html lang="fr">
 	<head>
     <meta charset="utf-8">
-    <title>Visualisation de systèmes à composants</title>
+    <title>Component system instance generation and clustering</title>
     <meta name="color-scheme" content="dark light">
     <link rel="stylesheet" href="./css/style.css">
     <script type="module" src="./js/ihm.js"></script>
 </head>
 
 <body>
+    <input type="radio" name="rad0" id="radGeneration" checked>
+    <input type="radio" name="rad0" id="radClustering">
 
+    <header>
+        <label for="radGeneration">Generation</label>
+        <label for="radClustering">Sampling</label>
+    </header>
+
+    <div id="bcGeneration">
     <section id="step0">
         <h2>Step 1: edit component model</h2>
         <p>Load a JSON file description, or complete the existing sample below.</p>
@@ -80,6 +88,47 @@
             <button id="btnPrevious2">Previous step (functions)</button>
         </footer>
     </section>
-        
+    </div>   
+    
+    <div id="bcClustering">
+        <section id="step0_2">
+            <h2>Step 1: load Instances description</h2>
+            <p>Load a JSON instances description file, or complete the existing sample below.</p>
+            <form>
+                <input type="file" id="fileReader2" accept="json" size="40" placeholder="" value="No selected file"><br>
+                <p id="analysis2"></p>
+                <textarea id="instances2"></textarea><br>
+                <input type="reset" value="Erase">
+            </form>
+            <footer>
+                <button id="btnNext0_2">Next step (sampling parameters)</button>
+            </footer>    
+        </section>
+        <section id="step1_2">
+            <h2>Step 2: define component complexity parameters</h2>
+            <form>
+
+            </form>
+            <footer>
+                <button id="btnPrevious0_2">Previous step (instances edition)</button>
+                <button id="btnNext1_2">Next step (clustering)</button>
+            </footer>
+        </section>
+        <section id="step2_2">
+            <h2>Step 3: Clustering results:</h2>
+            <p>Select distance function : <br>
+                <label><input type="radio" name="radDistance" value="c-only">component complexity</label>
+                <label><input type="radio" name="radDistance" value="p-only">parameters score</label>
+                <label><input type="radio" name="radDistance" value="cp-separated">both (separate parameters)</label>
+                <label><input type="radio" name="radDistance" value="cp-grouped" checked>both (group parameters)</label>
+            </p>
+            <p>Choose number of clusters : <input type="number" id="numClusters" step="1" min="1" value="2"></p>
+            <canvas id="cvsClusters"></canvas>
+            <footer>
+                <button id="btnPrevious1_2">Previous step (sampling parameters)</button>
+            </footer>
+        </section>
+    </div>
+
 </body>
 </html>

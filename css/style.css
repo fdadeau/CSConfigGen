@@ -89,7 +89,7 @@ input[type=file] {
     width: 300px;
 }
 
-#step0 textarea {
+#step0 textarea, #step0_2 textarea {
     min-width: 600px;
     height: 60vh;
 }
@@ -99,17 +99,17 @@ ul {
     padding-left: 30px;
 }
 
-#analysis {
+#analysis, #analysis2 {
     display: none;
     padding: 10px;
     margin: 5px 10px;
     border-radius: 10px;
 }
-#analysis.ok {
+#analysis.ok, #analysis2.ok {
     color: green;
     background-color: #CFC;    
 }
-#analysis.error {
+#analysis.error, #analysis2.error {
     color: darkred;
     background-color: #FCC;
 }
@@ -163,6 +163,12 @@ input[type="number"] {
 section > :last-child {
     display: block;   
     margin-top: 20px;
+    position: absolute; 
+    top: 0;
+    width: 100%;
+}
+section {
+    padding-top: 80px;
 }
 button[id^="btnNext"] {
     float: right;   
@@ -171,4 +177,51 @@ button[id^="btnNext"] {
 button[id^="btnPrevious"] {
     float: left;   
     margin-left: 30px;
+}
+
+#link2json {
+    display: block;
+    margin: 10px; 
+}
+
+header > label {
+    display: inline-block; 
+    margin: 10px 20px 10px 0;
+    cursor: pointer;
+}
+body > input[type="radio"] {
+    display: none;
+}
+input ~ div {
+    display: none;
+    position: relative;
+}
+#radGeneration:checked ~ #bcGeneration {
+    display: block;
+}
+#radGeneration:checked:checked ~ header > label[for="radGeneration"] {
+    text-decoration: underline;
+}
+#radClustering:checked ~ #bcClustering {
+    display: block;
+}
+#radClustering:checked ~ header > label[for="radClustering"] {
+    text-decoration: underline;
+}
+
+#step1_2 label {
+    display: block;
+    margin: 10px;
+    width: 300px;
+}
+#step1_2 label input {
+    float: right;
+}
+#step2_2 label {
+    display: inline-block;
+    margin: 10px;
+    cursor: pointer;
+}
+#step2_2 label input {
+    margin-right: 10px;
 }

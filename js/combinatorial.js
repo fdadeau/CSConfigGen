@@ -1,6 +1,9 @@
-
 const DEBUG = false;
 
+const SYMMETRY_PARENTS = true;
+const SYMMETRY_DELEGATIONS = true;
+const SYMMETRY_BINDINGS = true;
+const INVARIANT = true;
 
 //------------------- GENERATION OF CONFIGURATIONS ------------------------//
 
@@ -8,7 +11,7 @@ const DEBUG = false;
  *  Combinatorial generation of configurations. 
  *  @param  Object  description     the JSON description of the 
  */
-export function* generate(description, params) {
+ function* generate(description, params) {
 
     checkParameter(description, params);
     
@@ -111,7 +114,7 @@ function createInstancesFromRepartition(repartition) {
 /** 
  *  Generates the parameters based on the Definer set of Relations. 
  */
-export function generateParameters(description, funcForData, instances) {
+function generateParameters(description, funcForData, instances) {
     for (let name in description.Relations.Definer) {
         let ctype = description.Relations.Definer[name];
         DEBUG && console.log("Generating parameter " + name + " for instances of " + ctype);
@@ -124,11 +127,14 @@ export function generateParameters(description, funcForData, instances) {
                     throw { msg: "Parameter type undefined for " + name };
                 }
                 // generate data value according to type
+                if (!instances[ctype][instID]._parameters) {
+                    instances[ctype][instID]._parameters = {};
+                }
                 if (funcForData[type]) {
-                    instances[ctype][instID][name] = funcForData[type]();
+                    instances[ctype][instID]._parameters[name] = funcForData[type]();
                 }
                 else {
-                    instances[ctype][instID][name] = 0;
+                    instances[ctype][instID]._parameters[name] = 0;
                 }
             }
         }
@@ -176,7 +182,7 @@ function* generateParents(description, _instances) {
         // assign parents 
         for (let ctype in instances) {
             for (let inst in instances[ctype]) {
-                instances[ctype][inst].parent = possibleParents[ctype][parentsIdx[inst].current];
+                instances[ctype][inst]._parent = possibleParents[ctype][parentsIdx[inst].current];
             }
         }
         // proceed to next step
@@ -204,18 +210,18 @@ function isParentingValid(instances, hashes) {
     for (let ctype in instances) {
         for (let inst in instances[ctype]) {
             let k = instances[ctype][inst];
-            if (k.parent != null) {
-                if (!children[k.parent]) {
-                    children[k.parent] = {};   
+            if (k._parent != null) {
+                if (!children[k._parent]) {
+                    children[k._parent] = {};   
                 }
-                if (!children[k.parent][ctype]) {
-                    children[k.parent][ctype] = [];
+                if (!children[k._parent][ctype]) {
+                    children[k._parent][ctype] = [];
                 }
-                if (! count[k.parent]) {
-                    count[k.parent] = 0;
+                if (! count[k._parent]) {
+                    count[k._parent] = 0;
                 }
-                children[k.parent][ctype].push(inst);
-                count[k.parent]++;
+                children[k._parent][ctype].push(inst);
+                count[k._parent]++;
             }
             else {
                 root.push(inst);   
@@ -261,8 +267,8 @@ function isParentingValid(instances, hashes) {
     
     // check if hash already met
     DEBUG && console.log("check if hash " + hash + "\nin " + hashes.join(",\n"));
-    if (true 
-        && hashes.indexOf(hash) < 0
+    if (! SYMMETRY_PARENTS || 
+        hashes.indexOf(hash) < 0
        ) {
         // store the hash and acknowledge unknown new repartition
         hashes.push(hash);
@@ -287,14 +293,14 @@ function* generateDelegations(description, _instances) {
     // add to components their children
     for (let ctype in instances) {
         for (let inst in instances[ctype]) {
-            let pName = instances[ctype][inst].parent;
+            let pName = instances[ctype][inst]._parent;
             if (pName != null) {
                 let parentCType = pName.substring(0, pName.lastIndexOf("_"));
                 let parent = instances[parentCType][pName];
-                if (parent.children === undefined) {
-                    parent.children = [];
+                if (parent._children === undefined) {
+                    parent._children = [];
                 }
-                parent.children.push(inst);
+                parent._children.push(inst);
             }
         }
     }
@@ -319,7 +325,7 @@ function* generateDelegations(description, _instances) {
         for (let pInst of iParentComponents) {
             let key = `${pInst},${iParent}`;
             // compute possible children to delegate the provided interface 
-            let possibleChildren = iChildComponents.filter(e => instances[iChildCType][e].parent == pInst);
+            let possibleChildren = iChildComponents.filter(e => instances[iChildCType][e]._parent == pInst);
             if (possibleChildren.length == 0) {
                 DEBUG && console.log(" -> failed due to empty children set for component " + pInst);
                 return;
@@ -343,7 +349,7 @@ function* generateDelegations(description, _instances) {
         for (let pInst of iParentComponents) {
             let key = `${pInst},${iParent}`;
             // compute possible children to delegate the required interface 
-            let possibleChildren = iChildComponents.filter(e => instances[iChildCType][e].parent == pInst);
+            let possibleChildren = iChildComponents.filter(e => instances[iChildCType][e]._parent == pInst);
             if (possibleChildren.length == 0) {
                 DEBUG && console.log(" -> failed due to empty children set for component " + pInst);
                 return;
@@ -369,8 +375,8 @@ function* generateDelegations(description, _instances) {
             
             let hashR = computeHashForDelegation(delegR, instances);
             // console.log(hashR);
-            if (true 
-                //&& hashesR.indexOf(hashR) < 0
+            if (!SYMMETRY_DELEGATIONS || 
+                hashesR.indexOf(hashR) < 0
                ) {
                 // add to hashes    
                 hashesR.push(hashR);
@@ -389,8 +395,8 @@ function* generateDelegations(description, _instances) {
                         }                    
                         
                         let hashP = computeHashForDelegation(delegP, instances);
-                        if (true 
-                           && hashesP.indexOf(hashP) < 0
+                        if (!SYMMETRY_DELEGATIONS || 
+                            hashesP.indexOf(hashP) < 0
                            ) {
                             // add to hashes
                             hashesP.push(hashP);   
@@ -569,8 +575,8 @@ function* generateBindings(description, instances, delegations) {
                                         // should not be carried by the same instance as the requiring component
                                         .filter(e => e != iRequiredInstance)
                                         // should have the same parent as the requiring component
-                                        .filter(e => instances[iProvidedCType][e].parent == 
-                                                     instances[iRequiredCType][iRequiredInstance].parent)
+                                        .filter(e => instances[iProvidedCType][e]._parent == 
+                                                     instances[iRequiredCType][iRequiredInstance]._parent)
                                         .map(e => `${e},${iProvidedName}`);
                 
                 possibleValues = possibleValues.concat(possibleValues0);
@@ -621,11 +627,11 @@ function* generateBindings(description, instances, delegations) {
             let hash = computeHashForBindings(bindings, instances, description);
               //  console.log(hash);
             
-            if (hashes.indexOf(hash) < 0 && 
+            if ((!SYMMETRY_BINDINGS || hashes.indexOf(hash) < 0) && 
                 hasNoLoop(bindings, description.Elements.IRequired) && 
                 mandatoryPInterfaces.every(e => bindings[e] && bindings[e].length > 0 && bindings[e][0] != null)) {
                 hashes.push(hash);
-                yield applyBinding(instances, bindings);
+                yield applyBinding(instances, bindings, delegations);
             }
         }
     } while (next(repartition));
@@ -756,15 +762,24 @@ function hasNoLoop2(binding, needle, start, IRequired) {
 
 
 
-function applyBinding(_instances, binding) {
+function applyBinding(_instances, binding, delegations) {
     let instances = JSON.parse(JSON.stringify(_instances));
+    applyPairing(instances, binding, "_bindings");
+    applyPairing(instances, delegations.provided, "_delegProv");
+    applyPairing(instances, delegations.required, "_delegReq");
+    return instances;
+}
+
+function applyPairing(instances, binding, name) {
     for (let i in binding) {
         let iInstance = i.split(",")[0];
         let iInterface = i.split(",")[1];
         let iCType = iInstance.substring(0, iInstance.lastIndexOf("_"));
-        instances[iCType][iInstance][iInterface] = binding[i];
+        if (!instances[iCType][iInstance][name]) {
+            instances[iCType][iInstance][name] = {};
+        }
+        instances[iCType][iInstance][name][iInterface] = binding[i];
     }
-    return instances;
 }
 
 
@@ -779,8 +794,8 @@ function toTerm(cName, instances) {
     let inst = instances[cType][cName];
     
     let term = cType;
-    if (inst.children && inst.children.length > 0) {
-        term += "(" + inst.children.map(e => toTerm(e, instances)).sort().join(",") + ")"; 
+    if (inst._children && inst._children.length > 0) {
+        term += "(" + inst._children.map(e => toTerm(e, instances)).sort().join(",") + ")"; 
     }
     return term;
 }
@@ -837,3 +852,26 @@ function next(data) {
     return false;
 }
 
+
+
+// if the module has no dependencies, the above pattern can be simplified to
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define([], factory);
+    } else if (typeof module === 'object' && module.exports) {
+        // Node. Does not work with strict CommonJS, but
+        // only CommonJS-like environments that support module.exports,
+        // like Node.
+        module.exports = factory();
+    } else {
+        // Browser globals (root is window)
+        root.returnExports = factory();
+  }
+}(typeof self !== 'undefined' ? self : this, function () {
+
+    // Just return a value to define the module export.
+    // This example returns an object, but the module
+    // can return a function as the exported value.
+    return { "generate": generate, "generateParameters": generateParameters };
+}));
