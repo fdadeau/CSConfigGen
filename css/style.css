@@ -225,3 +225,15 @@ input ~ div {
 #step2_2 label input {
     margin-right: 10px;
 }
+
+#step2_2 aside {
+    position: absolute;
+    right: 10px;
+    width: 45vw;
+    min-height: 50vh;
+    display: none;
+}
+#step2_2 aside button {
+    float: right;
+    margin-right: 10px;
+}

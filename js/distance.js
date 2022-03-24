@@ -283,7 +283,7 @@ function vectorize(data, type) {
 function createRandomCentroids(sample, K) {
     let ret = [...sample];
     while (ret.length > K) {
-        ret.splice(Math.random()*ret.length | 0, 1);
+        ret.splice(0, 1);
     }    
     return ret;
 }

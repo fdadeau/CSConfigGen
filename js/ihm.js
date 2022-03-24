@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
     const MODEL = document.getElementById("model");
     const INSTANCES = document.getElementById("instances2");
-
+    let tabConfigs = [];
     
     // read the JSON file
     document.getElementById("fileReader").addEventListener("change", function(e) {
@@ -142,6 +142,12 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
     
+    document.querySelector("#step2_2 aside").addEventListener("click", function(event) {
+        if (event.target.id == "btnCloseConfiguration") {
+            this.style.display = "none";
+        }
+    });
+
     
     function verifyFunctions() {
         // parsing invariant
@@ -217,8 +223,22 @@ document.addEventListener("DOMContentLoaded", function() {
     function afficherSolution(nb) {
         document.getElementById("nbSolution").innerHTML = (nb+1);
         let instance = solutions[nb];
+        document.getElementById("bcSolution").innerHTML = getHTMLForInstance(instance);
+        let linkToJSON = document.createElement("A");
+        linkToJSON.id = "link2json";
+        linkToJSON.target = "_blank";
+        linkToJSON.innerHTML = "Export solutions as JSON";
+        linkToJSON.href=window.URL.createObjectURL(new Blob([JSON.stringify(solutions)], { type: "application/json"}));
+        document.getElementById("bcSolution").appendChild(linkToJSON);
+    }
+
+
+    function getHTMLForInstance(instance) {
         let html = "<ul>";
         for (let ctype in instance) {
+            if (Object.keys(instance[ctype]).length == 0) {
+                continue;
+            }
             html += "<li>Components of type <i>" + ctype + "</i><ul>";
             for (let id in instance[ctype]) {
                 let inst = instance[ctype][id];
@@ -263,15 +283,9 @@ document.addEventListener("DOMContentLoaded", function() {
             html += "</ul></li>";
         }
         html += "</ul>";
-        document.getElementById("bcSolution").innerHTML = html;
-
-        let linkToJSON = document.createElement("A");
-        linkToJSON.id = "link2json";
-        linkToJSON.target = "_blank";
-        linkToJSON.innerHTML = "Export solutions as JSON";
-        linkToJSON.href=window.URL.createObjectURL(new Blob([JSON.stringify(solutions)], { type: "application/json"}));
-        document.getElementById("bcSolution").appendChild(linkToJSON);
+        return html;
     }
+
     
     function linkToInstance(name) {
         return "<a href='#" + name + "'>" + name + "</a>";   
@@ -487,6 +501,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         // find CTypes
         let configs = JSON.parse(INSTANCES.value)
+        tabConfigs = shuffle(configs);
         myALPHA = {};
         // find interfaces
         myICC = {};
@@ -621,11 +636,11 @@ document.addEventListener("DOMContentLoaded", function() {
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, ctx.width, ctx.height);
 
-        let tabConfigs = JSON.parse(INSTANCES.value);
         let t = tabConfigs.map(function(c) {
             return { 
                 "complexity": returnExports2.complexity(c, null, myALPHA, myICC), 
-                "score": returnExports2.score(c)
+                "score": returnExports2.score(c),
+                "config": c
             };
         });
         let distanceFuncName = document.querySelector('[name="radDistance"]:checked').value;
@@ -655,18 +670,20 @@ document.addEventListener("DOMContentLoaded", function() {
             ctx.arc(x, y, ctx.width/100, 0, Math.PI * 2);
             ctx.stroke();
             ctx.fill();
-            points.push([x,y,configs[i]]);
+            points.push([x,y,config]);
         }
 
     }
 
     function clickOnCanvas(event) {
-        let x = event.pageX - event.target.offsetLeft;
-        let y = event.pageY - event.target.offsetTop;
+
+        const rect = event.target.getBoundingClientRect();
+        const x = event.clientX - rect.left | 0;
+        const y = event.clientY - rect.top | 0;
 
         for (let i=0; i < points.length; i++) {
             if (distanceTo(x,y,points[i][0],points[i][1]) < Number(event.target.width) / 100) {
-                afficherInfosConfig(i);
+                afficherInfosConfig(points[i][2], i+1);
                 return ;
             }
         }
@@ -675,9 +692,27 @@ document.addEventListener("DOMContentLoaded", function() {
     function distanceTo(x1, y1, x2, y2) {
         return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
     }
-    function afficherInfosConfig(i) {
-        let config = JSON.parse(INSTANCES.value)[i];
-        alert(config);
+    function afficherInfosConfig(config, i) {
+        const aside = document.querySelector("#step2_2 > aside");
+        aside.innerHTML = "";
+
+        let btnClose = document.createElement("button");
+        btnClose.id = "btnCloseConfiguration";
+        btnClose.innerHTML = "Close";
+        aside.appendChild(btnClose);
+
+        let html = "<h2>Configuration " + i + "</h2>" + 
+            "<p>Complexity: " + config.complexity.toFixed(2) + "<br>Parameter scores:";
+        for (let p in config.score) {
+            html += "<br> - " + p + ": " + config.score[p].toFixed(2);
+        }
+        html += "</p>";
+
+        html += getHTMLForInstance(config.config);
+
+        aside.innerHTML += html;
+
+        aside.style.display = "block";
     }
 
     function determineBounds(configs) {
@@ -721,6 +756,21 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         console.log(ret)
         return ret;
+    }
+
+
+
+
+    function shuffle(t) {
+        let r = [...t];
+        for (let i=0; i < t.length*2; i++) {
+            let j = Math.random() * t.length | 0;
+            let k = Math.random() * t.length | 0;
+            let s = r[j];
+            r[j] = r[k]
+            r[k] = s;
+        }
+        return r;
     }
 
 });
